@@ -10,7 +10,7 @@
 			<td><code><img width="40" src="https://user-images.githubusercontent.com/25181517/192108891-d86b6220-e232-423a-bf5f-90903e6887c3.png" alt="Visual Studio Code" title="Visual Studio Code"/></code></td>
 			<td><code><img width="40" src="https://user-images.githubusercontent.com/25181517/183423507-c056a6f9-1ba8-4312-a350-19bcbc5a8697.png" alt="Python" title="Python"/></code></td>
 			<td><code><img width="40" src="https://user-images.githubusercontent.com/25181517/117208740-bfb78400-adf5-11eb-97bb-09072b6bedfc.png" alt="PostgreSQL" title="PostgreSQL"/></code></td>
-			<td><code><img width="40" src="https://user-images.githubusercontent.com/25181517/183896132-54262f2e-6d98-41e3-8888-e40ab5a17326.png" alt="AWS" title="AWS"/></code></td>
+			<td><code><img width="40" src="https://user-images.githubusercontent.com/25181517/183896132-54262f2e-6d98-41e3-8888-e40ab5a17326.png" alt="AWS" title="AWS"/></code></td>	
 			<td><code><img width="40" src="https://user-images.githubusercontent.com/25181517/184357834-eba1eee1-6074-4b9c-8ed3-5373868096cc.png" alt="Apache Spark" title="Apache Spark"/></code></td>
 			<td><code><img width="40" src="https://user-images.githubusercontent.com/25181517/197845567-86a09ca9-d96f-42c4-9ab1-8bce95ab000d.png" alt="Databricks" title="Databricks"/></code></td>
 		</tr>
@@ -67,6 +67,11 @@ Retrieving the necessary information about the cluster from AWS MSK management c
 
 To ensure the preservation of data after it has been read from the topics, an __AWS S3__ bucket and __VPC__ endpoint are being established and configured. The __Confluent Amazon S3 Connector__ is then downloaded and transferred to the __S3__ bucket via the __EC2__ instance. This connector serves as a sink, responsible for extracting data from the Kafka topics and storing it in the S3 bucket. In the MSK Console, a new plugin is created under custom plugins, which is located within the S3 bucket. Subsequently, a new connector is created and configured with MSK Connect, allowing data to be streamed through the cluster and saved in the S3 bucket using this plugin-connector pair.
 
+An API has been developed using the Kafka REST proxy method to ensure the seamless reception of data. This API is seamlessly connected to the EC2 instance, where a web proxy actively monitors incoming data.
+To facilitate API integration with the Kafka REST Proxy on the EC2 instance, the Confluent package is installed and configured.The IAM authentication process is performed to ensure secure access.Once the setup is successfully completed, the system is ready to receive data.
+
+Emulation of the data involves the retrieval of random data from an AWS RDS and its subsequent transmission to the invoke URL of the API,which was set up during the API's creation.Once the build process is completed successfully, the system becomes capable of seamlessly consuming data from the topics,where an S3 storage repository receives the data automatically.
+
 WIP
 
 ## Tools used
@@ -79,7 +84,9 @@ WIP
 
 - [Amazon Elastic Compute Cloud (Amazon EC2)](https://aws.amazon.com/ec2/) - EC2 is a cloud computing platform to run virtual computers and application in the cloud. It provides on-demand, scalable computing capacity to  develop and deploy applications.
 
-- [Amazon Managed Streaming for Apache Kafka (MSK)](https://aws.amazon.com/msk/) - Amazon MSK is a comprehensive managed service that empowers you to develop and operate applications that leverage Apache Kafka for processing streaming data.Amazon MSK, provides access to control-plane operations, including cluster creation, updates, and deletion. Additionally, Apache Kafka data-plane operations can utilized  for efficient data production and consumption. 
+- [Amazon Managed Streaming for Apache Kafka (MSK)](https://aws.amazon.com/msk/) - Amazon MSK is a comprehensive managed service that empowers you to develop and operate applications that leverage Apache Kafka for processing streaming data.Amazon MSK, provides access to control-plane operations, including cluster creation, updates, and deletion. Additionally, Apache Kafka data-plane operations can utilized  for efficient data production and consumption.
+
+- [Databricks](https://www.databricks.com/) - Databricks delivers a web-based platform for working with Spark, that provides automated cluster management and IPython-style notebooks.
 
 ## 5. Installation
 
@@ -90,10 +97,17 @@ Follow the steps to start the pipeline process:
 The project's structure:
 
 ```text
-.
-├── creds.yaml
-├── README.md
-└── user_posting_emulation.py
+📦pinterest-data-pipeline754
+ ┣ 📂creds
+ ┃ ┣ 📜12a740a19697-key-pair.pem
+ ┃ ┗ 📜settings.ini
+ ┣ 📂images
+ ┃ ┗ 📜cloud-pinterest-pipeline.webp
+ ┣ 📂src
+ ┃ ┗ 📜user_posting_emulation.py
+ ┣ 📜.gitignore
+ ┣ 📜LICENSE
+ ┗ 📜README.md
 ```
 
 ## Licence
