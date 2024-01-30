@@ -67,10 +67,15 @@ Retrieving the necessary information about the cluster from AWS MSK management c
 
 To ensure the preservation of data after it has been read from the topics, an __AWS S3__ bucket and __VPC__ endpoint are being established and configured. The __Confluent Amazon S3 Connector__ is then downloaded and transferred to the __S3__ bucket via the __EC2__ instance. This connector serves as a sink, responsible for extracting data from the Kafka topics and storing it in the S3 bucket. In the MSK Console, a new plugin is created under custom plugins, which is located within the S3 bucket. Subsequently, a new connector is created and configured with MSK Connect, allowing data to be streamed through the cluster and saved in the S3 bucket using this plugin-connector pair.
 
-An API has been developed using the Kafka REST proxy method to ensure the seamless reception of data. This API is seamlessly connected to the EC2 instance, where a web proxy actively monitors incoming data.
-To facilitate API integration with the Kafka REST Proxy on the EC2 instance, the Confluent package is installed and configured.The IAM authentication process is performed to ensure secure access.Once the setup is successfully completed, the system is ready to receive data.
+An __API__ has been developed using the __Kafka REST proxy__ method to ensure the seamless reception of data. This API is seamlessly connected to the EC2 instance, where a web proxy actively monitors incoming data.
+To facilitate API integration with the Kafka REST Proxy on the EC2 instance, the __Confluent package__ is installed and configured. The IAM authentication process is performed to ensure secure access. Once the setup is successfully completed, the system is ready to receive data.
 
-Emulation of the data involves the retrieval of random data from an AWS RDS and its subsequent transmission to the invoke URL of the API,which was set up during the API's creation.Once the build process is completed successfully, the system becomes capable of seamlessly consuming data from the topics,where an S3 storage repository receives the data automatically.
+Emulation of the data involves the retrieval of random data from an __AWS RDS__ and its subsequent transmission to the `invoke URL` of the API,which was set up during the API's creation. Once the build process is completed successfully, the system becomes capable of seamlessly consuming data from the topics,where an S3 storage repository receives the data automatically.
+
+Upon sending data to the API and passing it through the MSK cluster, it is automatically stored in an S3 bucket, organized into separate directories for each topic. The execution of data preparation and processing is accomplished through __Apache Spark__ on __Databricks__. To facilitate analysis, effective communication between the two platforms is necessary. This entails creating a new user with full access policy to the S3 bucket, generating the required _security credentials_, and downloading them.
+
+The process on Databricks involves uploading the credentials and creating a table to complete the task. In a fresh python notebook, the essential modules are imported and the integration with S3 is executed. The necessary information includes the _encoded security credentials_ with the `access key` and `secret access key`, the `AWS bucket name`, and the `mounting point`.  
+The listing of the mounted bucket `display(dbutils.fs.ls("/mnt/mount_name/.."))` reveals the content of the S3 bucket on Databricks, confirming its preparedness for the next step.
 
 WIP
 
@@ -88,9 +93,13 @@ WIP
 
 - [Databricks](https://www.databricks.com/) - Databricks delivers a web-based platform for working with Spark, that provides automated cluster management and IPython-style notebooks.
 
+WIP
+
 ## 5. Installation
 
 Follow the steps to start the pipeline process:
+
+WIP
 
 ## File structure
 
@@ -111,3 +120,5 @@ The project's structure:
 ```
 
 ## Licence
+
+MIT License - See LICENCE
