@@ -133,6 +133,8 @@ The following question are being answered:
 - __What are the median follower count of users based on their joining year and age group?__  
 ![Batch query-8](images/batch_q8.png)
 
+Once the connection between Databricks and MWAA is established, a requirements.txt file is generated and uploaded to S3. With the necessary configurations in place, everything is now set for running the dag. A `DAG` has been created and uploaded to the `dags` directory on the running `MWAA` environment. When navigating through the `Airflow` UI, the item is initially categorized under the paused section. Once it is changed to active, a daily run will be triggered and executed automatically.
+
 ## Tools used
 
 - [Amazon API Gateway](https://aws.amazon.com/api-gateway/) - Amazon API Gateway is a fully managed service that makes it easy for developers to create, publish, maintain, monitor, and secure APIs at any scale. APIs act as the "front door" for applications to access data, business logic, or functionality from your backend services.
@@ -178,6 +180,7 @@ The project's structure:
  ┃ ┣ 📜batch_q8.png
  ┃ ┗ 📜cloud-pinterest-pipeline.webp
  ┣ 📂src
+ ┃ ┣ 📜12a740a19697_dag.py
  ┃ ┗ 📜user_posting_emulation.py
  ┣ 📜.gitignore
  ┣ 📜LICENSE
