@@ -161,10 +161,21 @@ The project's structure:
 
 ```text
 📦pinterest-data-pipeline754
- ┣ 📂creds
- ┃ ┣ 📜12a740a19697-key-pair.pem
+📂creds
  ┃ ┗ 📜settings.ini
+ ┣ 📂databricks_notebooks
+ ┃ ┣ 📜AWS_S3_mounting_Notebook.ipynb
+ ┃ ┗ 📜Batch_data_cleaning_&_querying.ipynb
  ┣ 📂images
+ ┃ ┣ 📜batch_q1.png
+ ┃ ┣ 📜batch_q2.png
+ ┃ ┣ 📜batch_q3a.png
+ ┃ ┣ 📜batch_q3b.png
+ ┃ ┣ 📜batch_q4.png
+ ┃ ┣ 📜batch_q5.png
+ ┃ ┣ 📜batch_q6.png
+ ┃ ┣ 📜batch_q7.png
+ ┃ ┣ 📜batch_q8.png
  ┃ ┗ 📜cloud-pinterest-pipeline.webp
  ┣ 📂src
  ┃ ┗ 📜user_posting_emulation.py
