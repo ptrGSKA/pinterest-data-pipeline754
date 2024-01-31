@@ -25,7 +25,7 @@ Designed as an image sharing and social media platform, Pinterest serves as a va
 2. [Description](#2-description)
 
     2.1 [Pipeline architechture](#21-pipeline-architechture)  
-    2.2 [Project walkthrough](#22-project-walkthrough)  
+    2.2 [Project walkthrough](#22-project-walkthrough)
 
 3. [Tools used](#tools-used)
 4. [Installation](#5-installation)
@@ -77,7 +77,61 @@ Upon sending data to the API and passing it through the MSK cluster, it is autom
 The process on Databricks involves uploading the credentials and creating a table to complete the task. In a fresh python notebook, the essential modules are imported and the integration with S3 is executed. The necessary information includes the _encoded security credentials_ with the `access key` and `secret access key`, the `AWS bucket name`, and the `mounting point`.  
 The listing of the mounted bucket `display(dbutils.fs.ls("/mnt/mount_name/.."))` reveals the content of the S3 bucket on Databricks, confirming its preparedness for the next step.
 
-WIP
+#### 2.2.1 Data cleaning
+
+After integrating, it is imperative to clean the data contained in each bucket.
+
+`df_pin` table cleaning:
+
+- Replacing entries with no relevant data.
+- Cleaning up the follower count by replacing the `k` and `M` with the relevant numeric quivalent.
+- Converting each numeric type column to int.
+- Cleaning up the save location, leaving only the path.
+- Renaming the index column.
+- Reordering the table.
+
+`df_geo` table cleaning:
+
+- Creating a new array column `coordinates` with the latitude and longitude.
+- Dropping the latitude and longitude columns.
+- Converting the timestamp column into timestamp type and cleaning it up.
+- Reordering the columns.
+
+`df_user` table cleaning:
+
+- Creating a new column `user_name` containing both the first_name and last_name.
+- Dropping the first_name and last_name columns.
+- Converting the timestamp column into timestamp type and cleaning it up.
+- Reordering the columns.
+
+#### 2.2.2 Data querying
+
+The following question are being answered:
+
+- __What are the most popular Pinterest category people post to based on their country?__  
+![Batch query-1](images/batch_q1.png)
+
+- __How many posts each category had between 2018 and 2022?__  
+![Batch query-2](images/batch_q2.png)
+
+- __Who are the most followed users in each country?__  
+![Batch query-3](images/batch_q3a.png)
+![Batch query-3](images/batch_q3b.png)
+
+- __What are the most popular categories by age group?__  
+![Batch query-4](images/batch_q4.png)
+
+- __What is the median follower count for users by age group?__  
+![Batch query-5](images/batch_q5.png)
+
+- __What are the number of users joined each year?__  
+![Batch query-6](images/batch_q6.png)
+
+- __What us the median follower count of users based on their joining year?__  
+![Batch query-7](images/batch_q7.png)
+
+- __What are the median follower count of users based on their joining year and age group?__  
+![Batch query-8](images/batch_q8.png)
 
 ## Tools used
 
