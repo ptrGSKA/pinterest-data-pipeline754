@@ -163,7 +163,7 @@ The project's structure:
 
 ```text
 📦pinterest-data-pipeline754
-📂creds
+ ┣ 📂creds
  ┃ ┗ 📜settings.ini
  ┣ 📂databricks_notebooks
  ┃ ┣ 📜AWS_S3_mounting_Notebook.ipynb
