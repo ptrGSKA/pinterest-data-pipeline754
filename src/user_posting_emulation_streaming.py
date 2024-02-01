@@ -12,6 +12,7 @@ import datetime
 
 random.seed(100)
 
+
 class AWSDBConnector:
     '''
     Database connector class responsible for all database related comminucation.
@@ -61,8 +62,7 @@ class AWSDBConnector:
         '''
         engine = sqlalchemy.create_engine(f"mysql+pymysql://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}?charset=utf8mb4", poolclass=NullPool)
         return engine
-
-
+    
 class DataProducer:
     '''
     Data emulation class that contains the retrieval and posting of pinterest data.
@@ -72,14 +72,14 @@ class DataProducer:
         serialize_datatime: convert datatime object into standard iso format if there is any in the data
         data_emulator: reponsible for the communication with the API.
         run_infinite_post_data_loop: runs continuously, retrieves data from database and calls data_emulator to post the data
-                                    to the API.
+                                     to the API.
     '''
     
     def __init__(self):
         '''
         Class constructor responsible for the initialization of the default objects.
 
-        Args:
+        Parameters:
             new_connector: AWSConnector class instance
             config: coordinates all the configuration retrieval
             aws_user_id: aws user id to build the unique Kafka topic namnes
@@ -91,7 +91,7 @@ class DataProducer:
         config =  Config(RepositoryIni(self.new_connector.settings_file))
         
         self.aws_user_id = config('aws_user_id')
-        self.invoke_url  = config('aws-api-url')
+        self.invoke_url  = config('aws-api-url-kin')
 
     def serialize_datetime(self,obj):
         '''
@@ -109,36 +109,40 @@ class DataProducer:
             return obj.isoformat() 
         raise TypeError("Object is not serializable.")
     
-    def data_emulator(self, topic, dbdata):
+    def data_emulator(self, stream, data):
         '''
         This function is responsible for the preparation of the payload by serializing the json file,
         also converts any datetime object into iso format by calling the serialoze_datetime method.
-        It also builds the API's invoke url and sends the POST request to the API.
+        It builds the API's invoke url and sends the PUT request to the API.
 
         Args:
             data (dict): dictionary object contains the pin, geo or user data.
-            topic (string): topic name that belongs to the data and the invoke url is build from.
+            stream (string): stream name that belongs to the data and the invoke url is build from.
 
         Returns:
             None, informs the user about a succesfull post request if the status code is 200,
             otherwise exits with a HTTPError and status code.
         '''
 
-        payload = json.dumps({ "records": [{ "value": dbdata }] }, default = self.serialize_datetime)
-
-        headers = {'Content-Type': 'application/vnd.kafka.json.v2+json'}
-        invoke_url = f'{self.invoke_url}/topics/{self.aws_user_id}{topic}'
-        response = requests.request("POST", invoke_url, headers=headers, data=payload)
+        payload = json.dumps({
+                              "StreamName": f"{stream}",
+                              "Data":  data ,
+                              "PartitionKey": "partition-1"},
+                               default = self.serialize_datetime)
+        
+        headers = {'Content-Type': 'application/json'}
+        invoke_url = f'{self.invoke_url}/streams/{stream}/record'
+        response = requests.request("PUT", invoke_url, headers=headers, data=payload)
 
         try:
             response.raise_for_status()
-            print(f'Successful data transmission to topic {topic}')
+            print(f'Successful data transmission to stream {stream}')
         except requests.exceptions.HTTPError as err:
             print(f'The following error has occured: {err}')
-
+        
     def run_infinite_post_data_loop(self):
         '''
-        This function is responsible for the random data collection from the database for each topic and
+        This function is responsible for the random data collection from the database for each stream and
         the mapping of the result into a dictionary object. It calls the data_emulator method for each 
         topic subsequently.
 
@@ -172,18 +176,22 @@ class DataProducer:
                     user_result = dict(row._mapping)
 
 
-                # Dictionary with topics and DB data that is being looped through and the dataemulator method called
+                # Dictionary with stream and DB data that is being looped through and the dataemulator method called
                 # that prepares the payload and send a POST request to the API.
-                data_topics = {
-                                '.pin': pin_result,
-                                '.geo': geo_result,
-                                '.user': user_result
-                              }
+                data_streaming = {
+                               f'streaming-{self.aws_user_id}-pin': pin_result,
+                               f'streaming-{self.aws_user_id}-geo': geo_result,
+                               f'streaming-{self.aws_user_id}-user': user_result
+                               }
                 
-                for topic, dbdata in data_topics.items():
-                    self.data_emulator(topic, dbdata)
-            
+                for stream, data in data_streaming.items():
+                    self.data_emulator(stream, data)
+
 
 if __name__ == "__main__":
     producer = DataProducer()
     producer.run_infinite_post_data_loop()
+    
+    
+
+

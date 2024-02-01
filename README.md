@@ -22,15 +22,19 @@ Designed as an image sharing and social media platform, Pinterest serves as a va
 ## Table of Contents
 
 1. [Introduction](#1-introduction)
-2. [Description](#2-description)
-
-    2.1 [Pipeline architechture](#21-pipeline-architechture)  
-    2.2 [Project walkthrough](#22-project-walkthrough)
-
-3. [Tools used](#tools-used)
-4. [Installation](#5-installation)
-5. [File structure](#file-structure)
-6. [Licence](#licence)
+2. [Description](#2-description)  
+ 2.1 [Pipeline architechture](#21-pipeline-architechture)  
+ 2.2 [Project walkthrough](#22-project-walkthrough)
+3. [Tools used](#3-tools-used)
+4. [Installation](#4-installation)
+ 4.1 [Configuring EC2 Kafka client](#41-configuring-ec2-kafka-client)  
+ 4.2 [Connect MSK cluster to S3 bucket](#42-connect-msk-cluster-to-s3-bucket)  
+ 4.3 [Configuring API gateway](#43-configuring-api-gateway)  
+ 4.4 [Batch processing Databricks](#44-batch-processing-databricks)  
+ 4.5 [AWS MWAA](#45-aws-mwaa)  
+ 4.6 [AWS Kinesis](#46-aws-kinesis)  
+5. [File structure](#5-file-structure)
+6. [Licence](#6-licence)
 
 ## 1. Introduction
 
@@ -135,7 +139,19 @@ The following question are being answered:
 
 Once the connection between Databricks and MWAA is established, a requirements.txt file is generated and uploaded to S3. With the necessary configurations in place, everything is now set for running the dag. A `DAG` has been created and uploaded to the `dags` directory on the running `MWAA` environment. When navigating through the `Airflow` UI, the item is initially categorized under the paused section. Once it is changed to active, a daily run will be triggered and executed automatically.
 
-## Tools used
+The final phase of this project entailed the implementation of streaming data using AWS Kinesis. To begin streaming data with Kinesis, the initial step involves creating streams. The The subsequent streams are responsible for the
+data transport: `streaming-<>-pin`, `streaming-<>-geo` and `streaming-<>-user`. The streaming process is currently utilizing the API that was created earlier, therefore it requires modification in order to effectively manage streams. An additional IAM policy has been created and linked to a role, enabling the API to have unrestricted access to Kinesis.  
+The following modifications were made to the API:
+
+- New resource has been created and configured `streams` and a method to list streams `ListStreams`
+
+- New child resource has been created under streams `{stream-name}` with three additional methods `DescribeStream`, `CreateStream` and `DeleteStream` respontible for describing, creating and deleting a stream.
+
+- Two additional child resources have been created under _{stream-name}_, `record` and `records` that are responsible for a single or multiple record reading and transformation to send data to Kinesis.
+
+The data posting simulation, which interacts with the API streaming endpoint, is managed by the file __user_posting_emulation_streaming__. With a connection established between Databricks and AWS Kinesis, the stream can be seamlessly processed using `Apache Spark`, enabling concurrent cleaning and writing into `Delta tables` the final destination of the data.
+
+## 3. Tools used
 
 - [Amazon API Gateway](https://aws.amazon.com/api-gateway/) - Amazon API Gateway is a fully managed service that makes it easy for developers to create, publish, maintain, monitor, and secure APIs at any scale. APIs act as the "front door" for applications to access data, business logic, or functionality from your backend services.
 
@@ -147,25 +163,51 @@ Once the connection between Databricks and MWAA is established, a requirements.t
 
 - [Amazon Managed Streaming for Apache Kafka (MSK)](https://aws.amazon.com/msk/) - Amazon MSK is a comprehensive managed service that empowers you to develop and operate applications that leverage Apache Kafka for processing streaming data.Amazon MSK, provides access to control-plane operations, including cluster creation, updates, and deletion. Additionally, Apache Kafka data-plane operations can utilized  for efficient data production and consumption.
 
+- [Amazon Managed Workflows for Apache Airflow](https://aws.amazon.com/managed-workflows-for-apache-airflow/) - Workflow orchestration for Apache Airflow.
+
+- [Amazon Relational Database Service](https://aws.amazon.com/rds/) - Relational database in the cloud.
+
 - [Databricks](https://www.databricks.com/) - Databricks delivers a web-based platform for working with Spark, that provides automated cluster management and IPython-style notebooks.
 
-WIP
-
-## 5. Installation
+## 4. Installation
 
 Follow the steps to start the pipeline process:
 
+### 4.1 Configuring EC2 Kafka client
+
 WIP
 
-## File structure
+### 4.2 Connect MSK cluster to S3 bucket
+
+WIP
+
+### 4.3 Configuring API gateway
+
+WIP
+
+### 4.4 Batch processing Databricks
+
+WIP
+
+### 4.5 AWS MWAA
+
+WIP
+
+### 4.6 AWS Kinesis
+
+WIP
+
+## 5. File structure
 
 The project's structure:
 
 ```text
 📦pinterest-data-pipeline754
  ┣ 📂creds
+ ┃ ┣ 📜dummy_settings.ini
  ┃ ┗ 📜settings.ini
  ┣ 📂databricks_notebooks
+ ┃ ┣ 📜AWS_Kinesis_data_streaming.ipynb
  ┃ ┣ 📜AWS_S3_mounting_Notebook.ipynb
  ┃ ┗ 📜Batch_data_cleaning_&_querying.ipynb
  ┣ 📂images
@@ -181,12 +223,13 @@ The project's structure:
  ┃ ┗ 📜cloud-pinterest-pipeline.webp
  ┣ 📂src
  ┃ ┣ 📜12a740a19697_dag.py
- ┃ ┗ 📜user_posting_emulation.py
+ ┃ ┣ 📜user_posting_emulation.py
+ ┃ ┗ 📜user_posting_emulation_streaming.py
  ┣ 📜.gitignore
  ┣ 📜LICENSE
  ┗ 📜README.md
 ```
 
-## Licence
+## 6. Licence
 
 MIT License - See LICENCE
