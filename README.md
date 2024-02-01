@@ -26,7 +26,7 @@ Designed as an image sharing and social media platform, Pinterest serves as a va
  2.1 [Pipeline architechture](#21-pipeline-architechture)  
  2.2 [Project walkthrough](#22-project-walkthrough)
 3. [Tools used](#3-tools-used)
-4. [Installation](#4-installation)
+4. [Installation](#4-installation)  
  4.1 [Configuring EC2 Kafka client](#41-configuring-ec2-kafka-client)  
  4.2 [Connect MSK cluster to S3 bucket](#42-connect-msk-cluster-to-s3-bucket)  
  4.3 [Configuring API gateway](#43-configuring-api-gateway)  
