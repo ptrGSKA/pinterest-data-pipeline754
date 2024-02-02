@@ -9,7 +9,6 @@
 			<td><code><img width="40" src="https://user-images.githubusercontent.com/25181517/192108374-8da61ba1-99ec-41d7-80b8-fb2f7c0a4948.png" alt="GitHub" title="GitHub"/></code></td>
 			<td><code><img width="40" src="https://user-images.githubusercontent.com/25181517/192108891-d86b6220-e232-423a-bf5f-90903e6887c3.png" alt="Visual Studio Code" title="Visual Studio Code"/></code></td>
 			<td><code><img width="40" src="https://user-images.githubusercontent.com/25181517/183423507-c056a6f9-1ba8-4312-a350-19bcbc5a8697.png" alt="Python" title="Python"/></code></td>
-			<td><code><img width="40" src="https://user-images.githubusercontent.com/25181517/117208740-bfb78400-adf5-11eb-97bb-09072b6bedfc.png" alt="PostgreSQL" title="PostgreSQL"/></code></td>
 			<td><code><img width="40" src="https://user-images.githubusercontent.com/25181517/183896132-54262f2e-6d98-41e3-8888-e40ab5a17326.png" alt="AWS" title="AWS"/></code></td>	
 			<td><code><img width="40" src="https://user-images.githubusercontent.com/25181517/184357834-eba1eee1-6074-4b9c-8ed3-5373868096cc.png" alt="Apache Spark" title="Apache Spark"/></code></td>
 			<td><code><img width="40" src="https://user-images.githubusercontent.com/25181517/197845567-86a09ca9-d96f-42c4-9ab1-8bce95ab000d.png" alt="Databricks" title="Databricks"/></code></td>
@@ -27,12 +26,14 @@ Designed as an image sharing and social media platform, Pinterest serves as a va
  2.2 [Project walkthrough](#22-project-walkthrough)
 3. [Tools used](#3-tools-used)
 4. [Installation](#4-installation)  
- 4.1 [Configuring EC2 Kafka client](#41-configuring-ec2-kafka-client)  
- 4.2 [Connect MSK cluster to S3 bucket](#42-connect-msk-cluster-to-s3-bucket)  
- 4.3 [Configuring API gateway](#43-configuring-api-gateway)  
- 4.4 [Batch processing Databricks](#44-batch-processing-databricks)  
- 4.5 [AWS MWAA](#45-aws-mwaa)  
- 4.6 [AWS Kinesis](#46-aws-kinesis)  
+ 4.1 [Set up AWS RDS](#41-set-up-aws-rds)  
+ 4.2 [Create MSK Cluster](#42-create-msk-cluster)  
+ 4.3 [Configuring EC2 Kafka client](#43-configuring-ec2-kafka-client)  
+ 4.4 [Connect MSK cluster to S3 bucket](#44-connect-msk-cluster-to-s3-bucket)  
+ 4.5 [Configuring API gateway](#45-configuring-api-gateway)  
+ 4.6 [Batch processing Databricks](#46-batch-processing-databricks)  
+ 4.7 [AWS MWAA](#47-aws-mwaa)  
+ 4.8 [AWS Kinesis](#48-aws-kinesis)  
 5. [File structure](#5-file-structure)
 6. [Licence](#6-licence)
 
@@ -153,6 +154,8 @@ The data posting simulation, which interacts with the API streaming endpoint, is
 
 ## 3. Tools used
 
+- [Amazon IAM](https://aws.amazon.com/iam/) - Identity and access management to services and resources.
+
 - [Amazon API Gateway](https://aws.amazon.com/api-gateway/) - Amazon API Gateway is a fully managed service that makes it easy for developers to create, publish, maintain, monitor, and secure APIs at any scale. APIs act as the "front door" for applications to access data, business logic, or functionality from your backend services.
 
 - [Amazon Simple Storage Service (Amazon S3)](https://aws.amazon.com/s3/) - It's an object storage service provides unparalleled scalability, data availability, security, and performance. It caters to customers of various sizes and industries, enabling them to securely store and safeguard any volume of data for a wide range of purposes. Whether it's data lakes, cloud-native applications, or mobile apps.
@@ -163,39 +166,331 @@ The data posting simulation, which interacts with the API streaming endpoint, is
 
 - [Amazon Managed Streaming for Apache Kafka (MSK)](https://aws.amazon.com/msk/) - Amazon MSK is a comprehensive managed service that empowers you to develop and operate applications that leverage Apache Kafka for processing streaming data.Amazon MSK, provides access to control-plane operations, including cluster creation, updates, and deletion. Additionally, Apache Kafka data-plane operations can utilized  for efficient data production and consumption.
 
-- [Amazon Managed Workflows for Apache Airflow](https://aws.amazon.com/managed-workflows-for-apache-airflow/) - Workflow orchestration for Apache Airflow.
+- [Amazon Managed Workflows for Apache Airflow (MWAA)](https://aws.amazon.com/managed-workflows-for-apache-airflow/) - Workflow orchestration for Apache Airflow.
 
 - [Amazon Relational Database Service](https://aws.amazon.com/rds/) - Relational database in the cloud.
 
 - [Databricks](https://www.databricks.com/) - Databricks delivers a web-based platform for working with Spark, that provides automated cluster management and IPython-style notebooks.
 
+- [Apache Spark](https://spark.apache.org/) - It's a multi-language engine for executing data engineering, data science, and machine learning on single-node machines or clusters.
+
 ## 4. Installation
 
-Follow the steps to start the pipeline process:
+Follow the steps to start the process:
 
-### 4.1 Configuring EC2 Kafka client
+First make sure to change the `dummy_settings.ini` file to `settings.ini` and replace the credentials inside.
 
-WIP
+### 4.1 Set up AWS RDS
 
-### 4.2 Connect MSK cluster to S3 bucket
+ 1. Create a `PostgreSQL` database with three tables and upload the the data from the project's `db_data` directory.
 
-WIP
+    - `pinterest_data.csv`
+  	- `geolocation_data.csv`  
+  	- `user_data.csv`  
 
-### 4.3 Configuring API gateway
+### 4.2 Create MSK Cluster
 
-WIP
+ 1. Access the MSK dashboard and select the "Create Cluster" option from the top right corner to initiate cluster creation.
+ 2. Make your selection from the available options (`provisioned` reommended), specify the desired `broker type`, and allocate `storage` for each broker. To finalize, click on the "_create cluster_" button.
+ 3. Choose the cluster that has been created and on the summary page click on the option to "_view client information_".
+ 4. Copy the following options:
+  	- "_Private endpoint_": this is the bootstrap server
+  	- "_Plaintext_": zookeper connection string
+ 5. To enable the EC2 instance to send data to the cluster, simply navigate to the VPC service and under security groups select the default security group associated with the cluster.
+ 6. Access the "Edit inbound rules" section and proceed to add a new rule. From the Type column, choose "All traffic". In the Source column, input the security group ID of the client machine (locate this in the EC2 console). After saving the rules, the cluster will be configured to accept all traffic originating from the client machine.
 
-### 4.4 Batch processing Databricks
+### 4.3 Configuring EC2 Kafka client
 
-WIP
+1. Access the EC2 service and commence the creation of a new EC2 instance by simply clicking on the "_Launch instance_" button.
+2. Specify a name for your instance and choose the desired Amazon Machine Image in the Application and OS Images section.
+3. Select the instance type, leave the networking and storage options as default.
+4. Generate a key-pair and securely store the private key in a `<name_of_file>.pem` file. This particular key will enable secure remote access to the instance.
+5. To access the created instance, go to the EC2 dashboard and select the instance. Then, click on the "_connect_" button located at the top right corner. In the new window, you will find instructions on how to connect to the instance using the SSH client.
+6. Once connected to the client execute the following commands to install the necessary software and packages:
 
-### 4.5 AWS MWAA
+	- `sudo yum install java-1.8.0`
+	- `wget https://archive.apache.org/dist/kafka/2.8.1/kafka_2.12-2.8.1.tgz`
+	- `tar -xzf kafka_2.12-2.8.1.tgz`
+	- `cd kafka_2.12-2.8.1/bin/`
+	- `wget https://github.com/aws/aws-msk-iam-auth/releases/download/v1.1.5/aws-msk-iam-auth-1.1.5-all.jar`
+	- `nano ~/.bashrc`
+	- copy the following at the end of the file `export CLASSPATH=/home/ec2-user/kafka_2.12-2.8.1/libs/aws-msk-iam-auth-1.1.5-all.jar`, press `ctrl+o` then enter and `ctrl+x`
+	- `cd ~ && cd kafka_2.12-2.8.1/bin/`
+	- `nano client.properties` and copy the following into the file
 
-WIP
+```python
+# Sets up TLS for encryption and SASL for authN.
+security.protocol = SASL_SSL
 
-### 4.6 AWS Kinesis
+# Identifies the SASL mechanism to use.
+sasl.mechanism = AWS_MSK_IAM
 
-WIP
+# Binds SASL client implementation.
+sasl.jaas.config = software.amazon.msk.auth.iam.IAMLoginModule required awsRoleArn="Your Access Role";
+
+# Encapsulates constructing a SigV4 signature based on extracted credentials.
+# The SASL client bound by "sasl.jaas.config" invokes this class.
+sasl.client.callback.handler.class = software.amazon.msk.auth.iam.IAMClientCallbackHandler
+```
+
+7. Configure the EC2 client to use AWS IAM for cluster authenticationn: on the AWS IAM console navigate to "_Roles_" and click on "_Create role_", select "_AWS Service_" then select "_MSK Connect_" from the dropdown list. Click on next to define permissions for the Role, choose from "_AWS managed policies_" then click next. Review the role then give a name `<name>-ec2-access-role` and discription and finaly click on "_Create role_".
+8. Select the created role and copy it's `ARN`.
+9. Go to the `Trust relationships` tab and select `Edit trust policy`, Click on the `Add a principal` button and select `IAM roles` as the Principal type. Replace the `ARN` with the just copied `ARN`.
+10. In the `client.properties` file make sure to replace the "_<Your_Access_Role>_" with the above copied `ARN`.
+11. Navigate to the Kafka bin folder `cd kafka_2.12-2.8.1/bin/` and create three `Kafka` topics by typing the following on the `EC2 instance`:
+
+	- `./kafka-topics.sh --bootstrap-server <BootstrapServerString> --command-config client.properties --create --topic <topic_name>`  
+	Make sure to replace the `<BootstrapServerString>` with the one obtained from the MSK Cluster "_Private endpoint_", and give name to the topic `<name>.pin`,`<name>.geo` and `<name>.user`.
+
+### 4.4 Connect MSK cluster to S3 bucket
+
+1. Go to AWS S3 service page and click on `Create bucket`. Give a desired name and select the region. Leave the recommended default option for ownership and click on `Create bucket`.
+2. Create an `IAM role` that can write to the destination bucket. In the `IAM console` under `Access Management` click on `Create role`. Under `Trusted entity type`, select `AWS service`, and under the `Use case` field select S3 in the `Use cases for other AWS services` field. In the permission tab select `Create policy`. On the new tab select `JSON` and replace the policy with the following:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket",
+                "s3:DeleteObject",
+                "s3:GetBucketLocation"
+            ],
+            "Resource": [
+                "arn:aws:s3:::<DESTINATION_BUCKET>",
+                "arn:aws:s3:::<DESTINATION_BUCKET>/*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:ListBucketMultipartUploads",
+                "s3:AbortMultipartUpload",
+                "s3:ListMultipartUploadParts"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "VisualEditor2",
+            "Effect": "Allow",
+            "Action": "s3:ListAllMyBuckets",
+            "Resource": "*"
+        }
+    ]
+}
+```
+
+  Skip the rest and click on `Create policy`. Back on the main tab select the just created policy, skip the rest of the pages and click on `Create role`. On the main console select the role just been created and under the `Trust relationships` tab in the `Trusted entities` add the following policy:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "kafkaconnect.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+}
+```
+
+3. Navigate to the `VPC` console and select `Endpoints` under the `Virtual pricate cloud` then click on `Create endpoint`. Under service name choose the desired service and the `Gateway` type. Choose the VPC that corresponds to the MSK cluster's VPC from the drop-down menu in VPC section. Finally, select `Create endpoint`.
+4. Creating a custom plugin. On the EC2 instance run the following commands:
+
+	- `cd ~`
+	- `sudo -u ec2-user -i`
+	- `mkdir kafka-connect-s3 && cd kafka-connect-s3`
+	- `wget https://d1i4a15mxbxib1.cloudfront.net/api/plugins/confluentinc/kafka-connect-s3/versions/10.0.3/confluentinc-kafka-connect-s3-10.0.3.zip`
+	- `aws s3 cp ./confluentinc-kafka-connect-s3-10.0.3.zip s3://<BUCKET_NAME>/kafka-connect-s3/`  
+	Make sure to replace the bucket name in the last command with the created bucket's name.
+
+5. Open the MSK console and select `Customised plugins` under the `MSK Connect` section. Click on `Create customised plugin`, copy the bucket's url (obtained from S3 bucket page) where the connector has been uploaded from the EC2 instance and paste it into the `S3 URI`. Give a name to the plugin and click on `Create custom plugin`.
+6. In the MSK console, select `Connectors` under the `MSK Connect` section and choose `Create connector`. Select the created plugin then click next. Name the connector and choose the `MSK cluster` from the list. In the connector configuration settings copy the following:
+
+```ini
+connector.class=io.confluent.connect.s3.S3SinkConnector
+# same region as our bucket and cluster
+s3.region=us-east-1
+flush.size=1
+schema.compatibility=NONE
+tasks.max=3
+topics.regex=<YOUR_UUID>.*
+format.class=io.confluent.connect.s3.format.json.JsonFormat
+partitioner.class=io.confluent.connect.storage.partitioner.DefaultPartitioner
+value.converter.schemas.enable=false
+value.converter=org.apache.kafka.connect.json.JsonConverter
+storage.class=io.confluent.connect.s3.storage.S3Storage
+key.converter=org.apache.kafka.connect.storage.StringConverter
+s3.bucket.name=<BUCKET_NAME>
+```
+
+  Make sure to replace the `topics.regex` and the `s3.bucket.name`. After change the connector type to `Provisioned`, set the `MCU count per worker` and `Number of workers` to 1. `Worker Configuration` select `Use a custom configuration` then pick `confluent-worker`. `Access permissions` select the previously created IAM role. Skip the rest then click on the `Create connector`.
+
+### 4.5 Configuring API gateway
+
+1. Navigate to the API Gateway console and click on `Create API`, select `REST API` from the available options and under `Create new API` select `New API`, name it and in the `API endpoint tpe` select `Regional`. Finally click on `Create API`.
+2. Select the created API and under `Resouces` click on `Create resource`. Select the `Proxy resource` toggle, for the `Resource name` put `{proxy+}` and finally select `Enable API Gateway CORS` and click on `Create resource`.
+3. Select the `ANY` resource and start the integration process by clicking on the `Edit integration`. For the integration type select `HTTP`, also select the `HTTP proxy integration` toggle. For `HTTP method` select `ANY`. For the `Endpoint URL` the Kafka Client Amaxon EC2 instance PublicDNS is required that can be ontained from the EC2 instance page.
+The final url will look like `http://KafkaClientEC2InstancePublicDNS:8082/{proxy}`, so make sure the add the `:8082/{proxy}` at the end. Deploy the API and make note of the `invoke url`.
+4. On the EC2 instance run the following commands:
+
+	- `cd ~`
+	- `sudo wget https://packages.confluent.io/archive/7.2/confluent-7.2.0.tar.gz`
+	- `tar -xvzf confluent-7.2.0.tar.gz`
+	- `cd confluent-7.2.0/etc/kafka-rest`
+	- `nano kafka-rest.properties`
+	Modify the `bootstrap.servers` and the `zookeeper.connect` variables with the one obtained in the __4.2 step 4__. Finally add the following to the file:
+
+```ini
+# Sets up TLS for encryption and SASL for authN.
+client.security.protocol = SASL_SSL
+
+# Identifies the SASL mechanism to use.
+client.sasl.mechanism = AWS_MSK_IAM
+
+# Binds SASL client implementation.
+client.sasl.jaas.config = software.amazon.msk.auth.iam.IAMLoginModule required awsRoleArn="Your Access Role";
+
+# Encapsulates constructing a SigV4 signature based on extracted credentials.
+# The SASL client bound by "sasl.jaas.config" invokes this class.
+client.sasl.client.callback.handler.class = software.amazon.msk.auth.iam.IAMClientCallbackHandler
+```
+
+Replace  the "Your Access Role" with the one made at __4.3 step 7__.
+
+5. Start the REST proxy by runnig the following commands:
+
+	- `cd confluent-7.2.0/bin/`
+	- `./kafka-rest-start /home/ec2-user/confluent-7.2.0/etc/kafka-rest/kafka-rest.properties`
+
+6. Run the `user_posting_emulation.py` file in the project's `src` directory.
+
+### 4.6 Batch processing Databricks
+
+1. Set up a Databricks account.
+2. Grant the created account full access to the AWS S3 bucket. In the `IAM console` under `Access Management` then `Users` add a new user with the desired name then click next. On the permission page search for `AmazonS3FullAccess` and check the box. Skip everything else until the `Review page` where click on "_Create_user_" botton.
+3. Select the created user and under `Security credentials` select `Create access key`. Check the box, give the keypair a description and select `Create access key`. Click on `Download.csv` file.
+4. Upload the generated credentials to Databricks by navigating to `Catalog`, click `Add` and `Add data` button. Click on the `Create or modify table` and drop the credentials file. The file will be uploaded to `dbfs:/user/hive/warehouse/`.
+5. Go to `Workspace` and on the top right corner click on the dots and select `Import`. Select the three notebooks from the project's `databricks_notebooks` directory.
+6. Once imported all three open the `AWS_3_mounting_notebook` and run it.
+7. After the S3 bucket has been mounted run the `Batch_data_cleaning_&_querying` notebook.
+
+### 4.7 AWS MWAA
+
+1. Create an S3 bucket for `MWAA`, make sure to `Block all public access` and enable `Bucket versioning`.
+2. Go to the `MWAA` console and click on `Create` button, select the appropriate region and choose `Create environment`. Specify the desired environment under `Environment details`. Under `DAG code in Amazon S3` browse  and select the bucket created in the previous step then click next. On the networking page select `Create MWAA VPC`. Choose the preferred `Apache Airflow access mode`, `private network` recommended. Under security groups create a new group. Under `Environment class` select the desired class as well ad the minimum and maximum worker count. FInally click on `Create environment`.
+3. Create an API token on Databricks, under `User settings`. Select `Access tokens` and `Generate new token`. Copy the `Token ID`.
+4. Open the Airflow UI from the `AWS MWAA` page. Navigate to `Admin` and select `Connections`. Select `databricks_default` and click on `Edit record`. In the `HOST` column copy the account url and in the `Extra` column add `{"token": "<token_from_previous_step>", "host": "<url_from_host_column>"}`. In the `Connection Type` columns select __Databricks__ from the drop-down menu. 5. If the connection type missing from the previous step install the following:
+
+	- `git clone https://github.com/aws/aws-mwaa-local-runner.git`
+	- `cd aws-mwaa-local-runner`
+	- `./mwaa-local-env build-image`
+	- `./mwaa-local-env start`
+	Open the `Airflow UI` at `http://localhost:8080/` with username __admin__ and password __test__. Navigate to `aws-mwaa-local-runner/requirements/` where create a `requirements.txt` file and add the following line `apache-airflow[databricks]`. Run the command
+	- `./mwaa-local-env test-requirements`
+	Upload the file to the S3 bucket, created in __step 1__. Navigate to MWAA console and select the __Environment__. Select `Edit` and under the `DAG code in Amazon S3` update the `Requirements file` by selecting the path to the `requirements.txt` file.
+	- On the `Airflow UI` select `Admin` and `Connections`, click on `Edit connection` on the `default_databricks` and make sure the _connection_id, connection_type, host and extra_ fields are not empty.
+
+6. Upload the `_dag.py` file from the project's `src` directory to the S3 bucket under the `dags` folder. Before that modify the `notebook_path` and `cluster_id` in the file. The notebook_path is wthe path of the `Batch_data_cleaning_&_querying` on Databricks and the cluster_id is a running cluster on Databricks.
+7. On the `Airflow UI` unpause the dag and trigger it manually.
+
+### 4.8 AWS Kinesis
+
+1. Go to the `Kinesis` console on AWS and click on the `Create data stream`. Give a name to the stream, select `Capacity mode` and click on `Create data stream`. Make sure to create three streams.
+2. Navigate to `IAM` console and create a new role. Choose the `AmazonKinesisFullAccessRole` policy.
+3. Modify the API create in step __4.5__. Create a new resource with name `streams` and then create a new `GET` method. In the create method page type the following:
+
+	- `Integration Type` : `AWS service`
+	- `AWS Region` : the region where all the services are for this project.
+	- `AWS Service` : `Kinesis`
+	- `HTTP method` : `POST`
+	- `Action Type` : `User action name`
+	- `Action name` : `Liststreams`
+	- `Execution role` : copy the `ARN` of the Kinesis access rolecreated in step 1
+	Click on `Create method`. On the `Method Execution` page select the `Integration panel` and click on `Edit`. Click on the `URL request headers parameters` and `Add request header parameter` button:
+	- `Name` : `Content-Type`
+	- `Mapped form` : `application/x-amz-json-1.1`
+	Expand the `Mapping Templates` panel and click on `Add mapping template`:
+	- `Content-Type` : `application/json`
+	- `Template body` : `{}`  
+4. Add a new resource under `streams` with name `{stream-name}` and add three new methods `POST`, `GET` and `DELETE`. Follow the same steps as above in __step 3__ but modify the following:  
+
+	__GET__
+	- `Action name` : `DescribeStream`
+	- `Template body` :
+
+	```json
+	{
+	"StreamName": "$input.params('stream-name')"
+	}
+	```
+
+	__POST__
+	- `Action name` : `CreateStream`
+	- `Template body` :
+
+	```json
+	{
+	"ShardCount": #if($input.path('$.ShardCount') == '') 5 #else $input.path('$.ShardCount') #end,
+	"StreamName": "$input.params('stream-name')"
+	}
+	```
+
+	__DELETE__
+	- `Action name` : `DeleteStream`
+	- `Template body` :
+
+	```json
+	{
+    "StreamName": "$input.params('stream-name')"
+	}
+	```
+
+5. Adding two new child resources under the `{stream-name}` with names `record` and `records` and create one method under each:  
+
+	__PUT__ for `record`
+	- `Action name` : `PutRecord`
+	- `Template body` :
+
+	```json
+	{
+    "StreamName": "$input.params('stream-name')",
+    "Data": "$util.base64Encode($input.json('$.Data'))",
+    "PartitionKey": "$input.path('$.PartitionKey')"
+	}
+	```
+
+	__PUT__ for `records`
+	- `Action name` : `PutRecord`
+	- `Template body` :
+
+	```json
+	{
+    "StreamName": "$input.params('stream-name')",
+    "Records": [
+       #foreach($elem in $input.path('$.records'))
+          {
+            "Data": "$util.base64Encode($elem.data)",
+            "PartitionKey": "$elem.partition-key"
+          }#if($foreach.hasNext),#end
+        #end
+    	]
+	}
+	```
+6. Run the `user_posting_emulation_streaming.py` file in the project's `src` directory.
+7. Run the `AWS_Kinesis_data_streaming` notebook on Databricks to process the data and save it.
+
+__IMPORTANT__  
+Make sure in all steps the region is the same for all services, all the credentials are replace, name of streams and buckets have been changed during the installation.
 
 ## 5. File structure
 
@@ -205,11 +500,14 @@ The project's structure:
 📦pinterest-data-pipeline754
  ┣ 📂creds
  ┃ ┣ 📜dummy_settings.ini
- ┃ ┗ 📜settings.ini
  ┣ 📂databricks_notebooks
  ┃ ┣ 📜AWS_Kinesis_data_streaming.ipynb
  ┃ ┣ 📜AWS_S3_mounting_Notebook.ipynb
  ┃ ┗ 📜Batch_data_cleaning_&_querying.ipynb
+ ┣ 📂db_data
+ ┃ ┣ 📜geolocation_data.csv
+ ┃ ┣ 📜pinterest_data.csv
+ ┃ ┗ 📜user_data.csv
  ┣ 📂images
  ┃ ┣ 📜batch_q1.png
  ┃ ┣ 📜batch_q2.png
